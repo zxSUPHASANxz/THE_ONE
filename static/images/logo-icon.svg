@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Filter สำหรับ glow effect -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- วงกลมวงที่ 3 (นอกสุด) - หมุน 210° -->
+  <g transform="translate(100, 100) rotate(210)">
+    <circle cx="0" cy="0" r="45" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="4"
+            opacity="1.0"
+            filter="url(#glow)"/>
+    <circle cx="0" cy="-10" r="15" 
+            fill="currentColor" 
+            opacity="0.15"
+            filter="url(#glow)"/>
+  </g>
+  
+  <!-- วงกลมวงที่ 2 (ตรงกลาง) - หมุน 90° -->
+  <g transform="translate(100, 100) rotate(90)">
+    <circle cx="0" cy="0" r="35" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="5"
+            opacity="0.8"
+            filter="url(#glow)"/>
+    <ellipse cx="-6" cy="6" rx="12" ry="9" 
+             fill="currentColor" 
+             opacity="0.2"
+             filter="url(#glow)"/>
+  </g>
+  
+  <!-- วงกลมวงที่ 1 (ในสุด) - หมุน -30° -->
+  <g transform="translate(100, 100) rotate(-30)">
+    <circle cx="0" cy="0" r="25" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="5"
+            opacity="0.9"
+            filter="url(#glow)"/>
+    <ellipse cx="5" cy="5" rx="10" ry="7" 
+             fill="currentColor" 
+             opacity="0.25"
+             filter="url(#glow)"/>
+  </g>
+  
+  <!-- จุดกลาง -->
+  <circle cx="100" cy="100" r="10" 
+          fill="currentColor" 
+          opacity="0.6"
+          filter="url(#glow)"/>
+</svg>

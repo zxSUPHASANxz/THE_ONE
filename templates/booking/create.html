@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}จองคิวซ่อม - THE ONE{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-10 px-4" x-data="bookingForm()">
+    <!-- Header Section -->
+    <div class="text-center mb-10 space-y-3 animate-fade-in">
+        <div class="pill mx-auto w-max">
+            <i class="fas fa-bolt"></i>
+            จองคิวซ่อมแบบรวดเร็ว
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">เลือกวันเวลาที่สะดวก แล้วมอบให้เราดูแล</h1>
+        <p class="text-gray-600 max-w-2xl mx-auto">ใส่รายละเอียดอาการรถ เลือกวัน เวลา และหมายเหตุพิเศษ ทีมช่างพร้อมรับงานทันที</p>
+    </div>
+
+    <div class="section-shell p-8 space-y-8 animate-slide-up">
+        {% if messages %}
+        <div class="space-y-3">
+            {% for message in messages %}
+            <div class="p-4 rounded-lg border text-sm font-semibold flex items-center gap-3
+                {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% else %}bg-green-50 text-green-800 border-green-200{% endif %}">
+                <span>{% if message.tags == 'error' %}⚠️{% else %}✅{% endif %}</span>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'booking_create' %}" class="space-y-8">
+            {% csrf_token %}
+
+            <!-- เลือกรถ -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <i class="fas fa-motorcycle text-primary-700"></i>
+                    <span>เลือกรถของคุณ</span>
+                </div>
+                {% if motorcycles %}
+                <div class="relative">
+                    <select name="motorcycle" required class="select-field">
+                        <option value="">-- เลือกรถที่ต้องการซ่อม --</option>
+                        {% for motorcycle in motorcycles %}
+                        <option value="{{ motorcycle.id }}">
+                            {{ motorcycle.brand }} {{ motorcycle.model }} • {{ motorcycle.license_plate }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-center gap-3 text-yellow-800 font-semibold">
+                        <span class="text-xl">⚠️</span>
+                        <span>คุณยังไม่มีข้อมูลรถในระบบ</span>
+                    </div>
+                    <a href="{% url 'motorcycle_list' %}" class="btn-primary text-sm">เพิ่มรถใหม่</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- อาการที่พบ -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <i class="fas fa-tools text-primary-700"></i>
+                    <span>อาการที่พบ</span>
+                </div>
+                <textarea name="problem_description" rows="4" required
+                          class="input-field"
+                          placeholder="บอกรายละเอียดอาการ เช่น สตาร์ทไม่ติด เสียงดัง เบรกอ่อน น้ำมันรั่ว"></textarea>
+            </div>
+
+            <!-- วันและเวลานัดหมาย -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <i class="far fa-calendar text-primary-700"></i>
+                        <span>วันที่นัดหมาย</span>
+                    </div>
+                    <input type="date" name="appointment_date" required
+                           :min="minDate"
+                           class="input-field">
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                        <i class="far fa-clock text-primary-700"></i>
+                        <span>เวลานัดหมาย</span>
+                    </div>
+                    <div class="relative">
+                        <select name="appointment_time" required class="select-field">
+                            <option value="">-- เลือกช่วงเวลา --</option>
+                            <option value="09:00">09:00 น. (เช้า)</option>
+                            <option value="10:00">10:00 น. (เช้า)</option>
+                            <option value="11:00">11:00 น. (สาย)</option>
+                            <option value="13:00">13:00 น. (บ่าย)</option>
+                            <option value="14:00">14:00 น. (บ่าย)</option>
+                            <option value="15:00">15:00 น. (เย็น)</option>
+                            <option value="16:00">16:00 น. (เย็น)</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- หมายเหตุเพิ่มเติม -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                    <i class="fas fa-clipboard-list text-primary-700"></i>
+                    <span>หมายเหตุเพิ่มเติม (ถ้ามี)</span>
+                </div>
+                <textarea name="notes" rows="3"
+                          class="input-field"
+                          placeholder="ข้อมูลเพิ่มเติม เช่น อะไหล่ที่ต้องการเปลี่ยน หรือข้อกังวลพิเศษ"></textarea>
+            </div>
+
+            <div class="pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
+                <button type="submit" class="btn-primary flex-1 justify-center" {% if not motorcycles %}disabled{% endif %}>
+                    ยืนยันการจองคิว
+                </button>
+                <a href="{% url 'booking_list' %}" class="btn-secondary flex-1 justify-center">
+                    ดูการจองทั้งหมด
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function bookingForm() {
+    return {
+        minDate: new Date().toISOString().split('T')[0]
+    }
+}
+</script>
+{% endblock %}

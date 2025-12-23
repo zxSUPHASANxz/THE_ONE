@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Mechanic Dashboard - THE ONE{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4" x-data="mechanicDashboard()">
+    <!-- Header Section -->
+    <div class="mb-8 animate-fade-in flex items-start justify-between gap-4">
+        <div class="space-y-2">
+            <div class="pill">
+                <i class="fas fa-tools"></i>
+                ระบบช่างซ่อม
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900">จัดการและติดตามงานซ่อม</h1>
+            <p class="text-gray-600">ดูคิว รับงาน อัปเดตสถานะ และปิดงานในที่เดียว</p>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 animate-slide-up">
+        <div class="panel p-5 bg-yellow-50/70 border-yellow-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-semibold text-yellow-900 mb-1 flex items-center gap-2">
+                        <span class="text-lg">⏳</span>
+                        คิวรอรับงาน
+                    </div>
+                    <div class="text-3xl font-bold text-yellow-900">{{ pending_count|default:0 }}</div>
+                </div>
+                <div class="text-3xl opacity-30 text-yellow-900">📋</div>
+            </div>
+        </div>
+        <div class="panel p-5 bg-blue-50/70 border-blue-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-semibold text-blue-900 mb-1 flex items-center gap-2">
+                        <span class="text-lg">🔧</span>
+                        กำลังซ่อม
+                    </div>
+                    <div class="text-3xl font-bold text-blue-900">{{ in_progress_count|default:0 }}</div>
+                </div>
+                <div class="text-3xl opacity-30 text-blue-900">🔩</div>
+            </div>
+        </div>
+        <div class="panel p-5 bg-green-50/70 border-green-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-semibold text-green-900 mb-1 flex items-center gap-2">
+                        <span class="text-lg">✅</span>
+                        เสร็จวันนี้
+                    </div>
+                    <div class="text-3xl font-bold text-green-900">{{ completed_today|default:0 }}</div>
+                </div>
+                <div class="text-3xl opacity-30 text-green-900">🎉</div>
+            </div>
+        </div>
+        <div class="panel p-5 bg-purple-50/70 border-purple-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-semibold text-purple-900 mb-1 flex items-center gap-2">
+                        <span class="text-lg">⭐</span>
+                        คะแนนเฉลี่ย
+                    </div>
+                    <div class="text-3xl font-bold text-purple-900">{{ average_rating|default:"N/A" }}</div>
+                </div>
+                <div class="text-3xl opacity-30 text-purple-900">🏆</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="mb-8 section-shell p-2">
+        <nav class="flex space-x-2">
+            <button @click="activeTab = 'pending'" 
+                    :class="activeTab === 'pending' ? 'bg-yellow-100 text-yellow-900 shadow-sm' : 'text-gray-600 hover:bg-gray-50'"
+                    class="flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200">
+                <span class="flex items-center justify-center gap-2">
+                    <span>⏳</span>
+                    คิวรอรับงาน
+                </span>
+            </button>
+            <button @click="activeTab = 'in_progress'" 
+                    :class="activeTab === 'in_progress' ? 'bg-blue-100 text-blue-900 shadow-sm' : 'text-gray-600 hover:bg-gray-50'"
+                    class="flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200">
+                <span class="flex items-center justify-center gap-2">
+                    <span>🔧</span>
+                    กำลังซ่อม
+                </span>
+            </button>
+            <button @click="activeTab = 'completed'" 
+                    :class="activeTab === 'completed' ? 'bg-green-100 text-green-900 shadow-sm' : 'text-gray-600 hover:bg-gray-50'"
+                    class="flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200">
+                <span class="flex items-center justify-center gap-2">
+                    <span>✅</span>
+                    เสร็จสิ้นแล้ว
+                </span>
+            </button>
+        </nav>
+    </div>
+    
+    <!-- Pending Work Queue -->
+    <div x-show="activeTab === 'pending'" class="space-y-4 animate-fade-in">
+        {% if work_queues %}
+        {% for queue in work_queues %}
+        {% if queue.status == 'pending' %}
+        <div class="panel p-6 hover:border-yellow-200 transition-colors">
+            <div class="flex justify-between items-start gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-gray-900">
+                            {{ queue.booking.motorcycle.brand }} {{ queue.booking.motorcycle.model }}
+                        </h3>
+                        <span class="badge bg-yellow-100 text-yellow-800">รอรับงาน</span>
+                    </div>
+                    <div class="text-sm text-gray-700 space-y-1">
+                        <p><span class="font-semibold text-gray-900">ลูกค้า:</span> {{ queue.booking.customer.username }}</p>
+                        <p><span class="font-semibold text-gray-900">ทะเบียน:</span> {{ queue.booking.motorcycle.license_plate }}</p>
+                        <p><span class="font-semibold text-gray-900">อาการ:</span> {{ queue.booking.problem_description }}</p>
+                        <p><span class="font-semibold text-gray-900">วันนัดหมาย:</span> {{ queue.booking.appointment_date|date:"d/m/Y H:i" }} น.</p>
+                        <p class="flex items-center gap-2"><span class="font-semibold text-gray-900">ระดับความสำคัญ:</span> 
+                            <span class="px-2 py-0.5 rounded text-xs font-semibold
+                                {% if queue.priority == 'urgent' %}bg-red-100 text-red-800
+                                {% elif queue.priority == 'high' %}bg-orange-100 text-orange-800
+                                {% elif queue.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ queue.get_priority_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-col space-y-2 min-w-[160px]">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="queue_id" value="{{ queue.id }}">
+                        <input type="hidden" name="action" value="accept">
+                        <button type="submit" class="btn-primary text-sm w-full justify-center">
+                            รับงาน
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <div class="card text-center py-12">
+            <div class="text-4xl mb-3">📭</div>
+            <p class="text-gray-500">ไม่มีคิวรอรับงาน</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- In Progress Work -->
+    <div x-show="activeTab === 'in_progress'" class="space-y-4 animate-fade-in" style="display: none;">
+        {% if work_queues %}
+        {% for queue in work_queues %}
+        {% if queue.status == 'in_progress' %}
+        <div class="panel p-6 hover:border-blue-200 transition-colors">
+            <div class="flex justify-between items-start mb-4 gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-gray-900">
+                            {{ queue.booking.motorcycle.brand }} {{ queue.booking.motorcycle.model }}
+                        </h3>
+                        <span class="badge bg-blue-100 text-blue-800">กำลังซ่อม</span>
+                    </div>
+                    <div class="text-sm text-gray-700 space-y-1">
+                        <p><span class="font-semibold text-gray-900">ลูกค้า:</span> {{ queue.booking.customer.username }}</p>
+                        <p><span class="font-semibold text-gray-900">ทะเบียน:</span> {{ queue.booking.motorcycle.license_plate }}</p>
+                        <p><span class="font-semibold text-gray-900">อาการ:</span> {{ queue.booking.problem_description }}</p>
+                        {% if queue.started_at %}
+                        <p><span class="font-semibold text-gray-900">เริ่มซ่อมเมื่อ:</span> {{ queue.started_at|date:"d/m/Y H:i" }} น.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Update Form -->
+            <form method="POST" class="mt-4 pt-4 border-t border-gray-100 space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="queue_id" value="{{ queue.id }}">
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-1">บันทึกการซ่อม</label>
+                    <textarea name="repair_notes" rows="3" class="input-field" 
+                              placeholder="เขียนรายละเอียดการซ่อม...">{{ queue.booking.repair_notes }}</textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-1">ราคาประเมิน (บาท)</label>
+                    <input type="number" name="estimated_cost" class="input-field" 
+                           value="{{ queue.booking.estimated_cost }}" min="0">
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" name="action" value="update" class="btn-secondary text-sm flex-1 justify-center">
+                        บันทึก
+                    </button>
+                    <button type="submit" name="action" value="complete" class="btn-primary text-sm flex-1 justify-center">
+                        เสร็จสิ้น
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <div class="card text-center py-12">
+            <div class="text-4xl mb-3">🔧</div>
+            <p class="text-gray-500">ไม่มีงานที่กำลังทำอยู่</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Completed Work -->
+    <div x-show="activeTab === 'completed'" class="space-y-4 animate-fade-in" style="display: none;">
+        {% if work_queues %}
+        {% for queue in work_queues %}
+        {% if queue.status == 'completed' %}
+        <div class="panel p-6 hover:border-green-200 transition-colors">
+            <div class="flex justify-between items-start gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-gray-900">
+                            {{ queue.booking.motorcycle.brand }} {{ queue.booking.motorcycle.model }}
+                        </h3>
+                        <span class="badge bg-green-100 text-green-800">เสร็จสิ้น</span>
+                    </div>
+                    <div class="text-sm text-gray-700 space-y-1">
+                        <p><span class="font-semibold text-gray-900">ลูกค้า:</span> {{ queue.booking.customer.username }}</p>
+                        <p><span class="font-semibold text-gray-900">ทะเบียน:</span> {{ queue.booking.motorcycle.license_plate }}</p>
+                        {% if queue.completed_at %}
+                        <p><span class="font-semibold text-gray-900">เสร็จเมื่อ:</span> {{ queue.completed_at|date:"d/m/Y H:i" }} น.</p>
+                        {% endif %}
+                        {% if queue.booking.estimated_cost %}
+                        <p><span class="font-semibold text-gray-900">ราคา:</span> {{ queue.booking.estimated_cost }} บาท</p>
+                        {% endif %}
+                        {% if queue.booking.repair_notes %}
+                        <p class="mt-2"><span class="font-semibold text-gray-900">รายละเอียด:</span> {{ queue.booking.repair_notes }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <div class="card text-center py-12">
+            <div class="text-4xl mb-3">✅</div>
+            <p class="text-gray-500">ไม่มีงานที่เสร็จสิ้นแล้ว</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function mechanicDashboard() {
+    return {
+        activeTab: 'pending',
+        
+        acceptWork(queueId) {
+            if (confirm('ต้องการรับงานนี้?')) {
+                fetch(`/api/work-queue/${queueId}/accept/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

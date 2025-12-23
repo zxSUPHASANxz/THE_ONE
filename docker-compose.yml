@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: the_one_v4_postgres
+    environment:
+      POSTGRES_DB: the_one_v4_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_HOST_AUTH_METHOD: md5
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_v4_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - the_one_network
+
+  # n8n Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: the_one_v4_n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Asia/Bangkok
+    ports:
+      - "5679:5678"
+    volumes:
+      - n8n_v4_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - the_one_network
+
+  # ngrok (for n8n webhook exposure) - Disabled for local development
+  # Uncomment and configure ngrok.yml if you need public webhooks
+  # ngrok:
+  #   image: ngrok/ngrok:latest
+  #   container_name: the_one_v4_ngrok
+  #   command:
+  #     - "start"
+  #     - "--all"
+  #     - "--config"
+  #     - "/etc/ngrok.yml"
+  #   volumes:
+  #     - ./ngrok.yml:/etc/ngrok.yml
+  #   ports:
+  #     - "4041:4040"  # ngrok web interface
+  #   depends_on:
+  #     - n8n
+  #   restart: unless-stopped
+  #   networks:
+  #     - the_one_network
+
+volumes:
+  postgres_v4_data:
+    driver: local
+  n8n_v4_data:
+    driver: local
+
+networks:
+  the_one_network:
+    driver: bridge

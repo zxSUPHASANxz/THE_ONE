@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chatbot - THE ONE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: calc(100vh - 350px);
+        min-height: 500px;
+    }
+    
+    .message-bubble {
+        max-width: 75%;
+        animation: slideInMessage 0.3s ease-out;
+    }
+    
+    @keyframes slideInMessage {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<canvas id="particle-bg"></canvas>
+
+<div class="max-w-5xl mx-auto py-10 px-4">
+    <!-- Header Section -->
+    <div class="text-center mb-8 animate-fade-in space-y-3">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-700 to-gold-500 text-white text-3xl shadow-lg">
+            🤖
+        </div>
+        <h1 class="text-4xl font-bold text-gray-900">AI Chatbot ที่ปรึกษาซ่อมรถ</h1>
+        <p class="text-gray-600 text-lg">ถามปัญหาเกี่ยวกับรถจักรยานยนต์ รับคำแนะนำทันที และไปต่อที่จองคิวได้ในไม่กี่คลิก</p>
+    </div>
+    
+    <div class="section-shell p-0 overflow-hidden animate-slide-up">
+        <!-- Chat Container -->
+        <div x-data="chatApp()" class="bg-white">
+            <!-- Messages Area -->
+            <div class="chat-container overflow-y-auto p-6 bg-gray-50 space-y-6" x-ref="chatContainer">
+                <template x-for="message in messages" :key="message.id">
+                    <div :class="message.sender === 'user' ? 'flex justify-end message-item' : 'flex justify-start message-item'">
+                        <div :class="message.sender === 'user' ? 
+                            'message-bubble bg-primary-700 text-white rounded-2xl rounded-tr-sm px-5 py-3 shadow-sm' : 
+                            'message-bubble bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-5 py-3 shadow-sm'">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-1">
+                                    <p class="leading-relaxed text-sm md:text-base" :class="message.sender === 'user' ? 'text-white' : 'text-gray-800'" x-text="message.text"></p>
+                                    <div class="mt-1 flex items-center gap-2 justify-end">
+                                        <span class="text-[10px] opacity-70" x-text="message.time"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Loading indicator -->
+                <div x-show="loading" class="flex justify-start animate-fade-in">
+                    <div class="message-bubble bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="typing-indicator flex gap-1">
+                                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="border-t border-gray-100 p-4 bg-white">
+                <form @submit.prevent="sendMessage()" class="flex gap-3">
+                    <div class="flex-1">
+                        <input type="text" 
+                               x-model="newMessage"
+                               placeholder="พิมพ์ข้อความของคุณ..." 
+                               class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-100 focus:border-primary-500 focus:bg-white transition-all duration-200 outline-none text-gray-800 placeholder-gray-400"
+                               :disabled="loading">
+                    </div>
+                    <button type="submit" 
+                            class="btn-primary px-5 py-3"
+                            :disabled="!newMessage.trim() || loading">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Questions -->
+            <div class="border-t border-gray-100 p-6 bg-white space-y-3">
+                <p class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <span class="text-lg">⚡</span>
+                    คำถามด่วน
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <button @click="quickQuestion('รถสตาร์ทไม่ติด')" 
+                            class="btn-secondary border border-primary-200 hover:border-primary-400">
+                        <span class="flex items-center gap-2 text-primary-800 text-sm font-semibold">
+                            <span class="text-base">🔧</span>
+                            รถสตาร์ทไม่ติด
+                        </span>
+                    </button>
+                    <button @click="quickQuestion('เครื่องเสียงดัง')" 
+                            class="btn-secondary border border-primary-200 hover:border-primary-400">
+                        <span class="flex items-center gap-2 text-primary-800 text-sm font-semibold">
+                            <span class="text-base">🔊</span>
+                            เครื่องเสียงดัง
+                        </span>
+                    </button>
+                    <button @click="quickQuestion('เบรกอ่อน')" 
+                            class="btn-secondary border border-primary-200 hover:border-primary-400">
+                        <span class="flex items-center gap-2 text-primary-800 text-sm font-semibold">
+                            <span class="text-base">🛑</span>
+                            เบรกอ่อน
+                        </span>
+                    </button>
+                    <button @click="quickQuestion('ต้องการจองคิวซ่อม')" 
+                            class="btn-gold text-white">
+                        <span class="flex items-center gap-2 text-sm font-semibold">
+                            <span class="text-base">📅</span>
+                            จองคิวซ่อม
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function chatApp() {
+    return {
+        messages: [
+            {
+                id: 1,
+                sender: 'bot',
+                text: 'สวัสดีครับ! ยินดีต้อนรับสู่ระบบที่ปรึกษาซ่อมรถ มีอะไรให้ช่วยไหมครับ?',
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+            }
+        ],
+        newMessage: '',
+        loading: false,
+        sessionId: null,
+        
+        init() {
+            this.createSession();
+        },
+        
+        async createSession() {
+            // สร้าง chat session ใหม่
+            this.sessionId = 'session_' + Date.now();
+        },
+        
+        quickQuestion(question) {
+            this.newMessage = question;
+            this.sendMessage();
+        },
+        
+        async sendMessage() {
+            if (!this.newMessage.trim()) return;
+            
+            const userMessage = {
+                id: Date.now(),
+                sender: 'user',
+                text: this.newMessage,
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+            };
+            
+            this.messages.push(userMessage);
+            const messageText = this.newMessage;
+            this.newMessage = '';
+            this.loading = true;
+            
+            // Scroll to bottom with smooth animation
+            this.$nextTick(() => {
+                const container = this.$refs.chatContainer;
+                container.scrollTo({
+                    top: container.scrollHeight,
+                    behavior: 'smooth'
+                });
+                
+                // Add animation to new message
+                const messages = container.querySelectorAll('.message-item');
+                if (messages.length > 0) {
+                    const lastMessage = messages[messages.length - 1];
+                    lastMessage.style.animation = 'fadeInUp 0.5s ease-out';
+                }
+            });
+            
+            try {
+                // ส่งไปยัง API (ตอนนี้จะใช้ mock response)
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Mock bot response
+                let botResponse = this.getMockResponse(messageText);
+                
+                this.messages.push({
+                    id: Date.now(),
+                    sender: 'bot',
+                    text: botResponse,
+                    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+                });
+                
+            } catch (error) {
+                this.messages.push({
+                    id: Date.now(),
+                    sender: 'bot',
+                    text: 'ขออภัยครับ เกิดข้อผิดพลาดในการประมวลผล กรุณาลองใหม่อีกครั้ง',
+                    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+                });
+            } finally {
+                this.loading = false;
+                this.$nextTick(() => {
+                    this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
+                });
+            }
+        },
+        
+        getMockResponse(message) {
+            const msg = message.toLowerCase();
+            
+            if (msg.includes('สตาร์ท') || msg.includes('ติด')) {
+                return 'ปัญหารถสตาร์ทไม่ติดอาจมาจากหลายสาเหตุครับ:\n\n1. แบตเตอรี่อาจจะหมด\n2. หัวเทียนอาจมีปัญหา\n3. น้ำมันอาจไม่ไหล\n\nแนะนำให้ตรวจสอบแบตเตอรี่ก่อนครับ หากต้องการความช่วยเหลือเพิ่มเติม สามารถจองคิวเข้าศูนย์ซ่อมได้เลยครับ';
+            }
+            
+            if (msg.includes('เสียง') || msg.includes('ดัง')) {
+                return 'เครื่องยนต์ที่เสียงดังผิดปกติอาจเกิดจาก:\n\n1. ท่อไอเสียรั่วหรือชำรุด\n2. โซ่อาจหลวมเกินไป\n3. เครื่องยนต์ขาดน้ำมันหล่อลื่น\n\nควรตรวจสอบและซ่อมโดยเร็วเพื่อป้องกันความเสียหายเพิ่มเติมครับ';
+            }
+            
+            if (msg.includes('เบรก')) {
+                return 'เบรกที่อ่อนหรือไม่ค่อยได้ผลอาจเป็นอันตราย ควรตรวจสอบทันที:\n\n1. ผ้าเบรกอาจบางหรือหมด\n2. น้ำมันเบรกอาจรั่วหรือน้อย\n3. จานเบรกอาจบุบหรือผิดรูป\n\nแนะนำให้จองคิวเข้าตรวจสอบโดยเร็วเพื่อความปลอดภัยครับ';
+            }
+            
+            if (msg.includes('จอง') || msg.includes('คิว')) {
+                return 'ยินดีครับ! สามารถจองคิวซ่อมได้ที่หน้าจองคิว\n\nกรุณาเตรียมข้อมูล:\n- รุ่นรถ\n- ทะเบียนรถ\n- อาการที่พบ\n- วันเวลาที่สะดวก\n\nคลิกที่ "จองคิวซ่อม" บนเมนูเพื่อดำเนินการต่อครับ';
+            }
+            
+            return 'ขอบคุณสำหรับคำถามครับ ระบบกำลังเรียนรู้และพัฒนาอยู่ หากต้องการความช่วยเหลือเฉพาะทาง แนะนำให้จองคิวเพื่อให้ช่างผู้เชี่ยวชาญตรวจสอบให้โดยตรงครับ';
+        }
+    }
+}
+</script>
+{% endblock %}

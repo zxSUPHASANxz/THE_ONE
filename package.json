@@ -1,0 +1,21 @@
+{
+    "name": "the_one_v4",
+    "version": "1.0.0",
+    "description": "Motorcycle Repair Chatbot & Booking System",
+    "scripts": {
+        "tailwind:build": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css",
+        "tailwind:watch": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
+        "dev": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch"
+    },
+    "keywords": [
+        "django",
+        "tailwindcss",
+        "motorcycle",
+        "chatbot"
+    ],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "tailwindcss": "^3.4.0"
+    }
+}

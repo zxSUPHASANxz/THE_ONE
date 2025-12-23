@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}สมัครสมาชิก - THE ONE{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center animate-fade-in space-y-3">
+            <div class="w-20 h-20 mx-auto bg-gradient-to-br from-primary-700 to-gold-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-pen text-white text-2xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">สมัครสมาชิกใหม่</h2>
+            <p class="text-sm text-gray-600">สร้างบัญชีเพื่อรับบริการพรีเมียมและติดตามงานซ่อม</p>
+        </div>
+        
+        <form class="section-shell p-8 space-y-6 animate-slide-up" method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+            <div class="space-y-5">
+                <div>
+                    <label for="username" class="block text-sm font-semibold text-gray-800 mb-1">ชื่อผู้ใช้</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <input id="username" name="username" type="text" required 
+                               class="input-field pl-10" 
+                               placeholder="ตั้งชื่อผู้ใช้ของคุณ">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-gray-800 mb-1">อีเมล</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <input id="email" name="email" type="email" required 
+                               class="input-field pl-10" 
+                               placeholder="email@example.com">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="user_type" class="block text-sm font-semibold text-gray-800 mb-1">ประเภทผู้ใช้</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <select id="user_type" name="user_type" class="select-field pl-10">
+                            <option value="customer">ลูกค้าทั่วไป</option>
+                            <option value="mechanic">ช่างซ่อม</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-semibold text-gray-800 mb-1">รหัสผ่าน</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <input id="password" name="password" type="password" required 
+                               class="input-field pl-10" 
+                               placeholder="ตั้งรหัสผ่านของคุณ">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="password2" class="block text-sm font-semibold text-gray-800 mb-1">ยืนยันรหัสผ่าน</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <input id="password2" name="password2" type="password" required 
+                               class="input-field pl-10" 
+                               placeholder="ยืนยันรหัสผ่านอีกครั้ง">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="w-full btn-primary justify-center">
+                    สมัครสมาชิก
+                </button>
+            </div>
+            
+            <div class="text-center pt-2">
+                <p class="text-sm text-gray-600">
+                    มีบัญชีอยู่แล้ว?
+                    <a href="{% url 'login' %}" class="font-semibold text-primary-700 hover:text-primary-900">
+                        เข้าสู่ระบบ
+                    </a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
